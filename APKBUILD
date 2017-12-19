@@ -1,0 +1,44 @@
+# Contributor: Sean Summers <seansummers@gmail.com>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+# TODO: Patch for LibreSSL.
+pkgname=tomcat-native
+pkgver=1.2.16
+pkgrel=0
+pkgdesc="Native resources optional component for Apache Tomcat"
+url="http://tomcat.apache.org/native-doc/"
+arch="all"
+license="ASL-2.0"
+depends="apr openssl"
+makedepends="apr-dev openssl-dev chrpath"
+subpackages="$pkgname-dev"
+source="http://www-eu.apache.org/dist/tomcat/tomcat-connectors/native/$pkgver/source/$pkgname-$pkgver-src.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver-src/native"
+
+build() {
+	cd "$builddir"
+
+	./configure --prefix=/usr \
+		--with-apr=/usr/bin/apr-1-config \
+		--with-java-home=/opt/jdk \
+		--with-ssl=yes
+	make
+}
+
+package() {
+	cd "$builddir"
+
+	make DESTDIR="$pkgdir" install
+
+	# Remove redundant rpath.
+	chrpath --delete "$pkgdir"/usr/lib/libtcnative-1.so
+
+	rm -f "$pkgdir"/usr/lib/libtcnative-1.la
+	rmdir "$pkgdir"/usr/bin
+}
+
+dev()  {
+	default_dev
+	mv "$subpkgdir"/usr/lib/libtcnative-1.so "$pkgdir"/usr/lib/
+}
+
+sha512sums="0345f85fbab406f25c25c8fc06bf55f3d166fa14bfcf542bddb5dc5db4c8c7bd0c5b71603d85261d71152ead3023b112144f2ffa5ede14ae8595013f79c802aa  tomcat-native-1.2.16-src.tar.gz"
